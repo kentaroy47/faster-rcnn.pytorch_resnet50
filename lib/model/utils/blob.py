@@ -38,9 +38,13 @@ def prep_im_for_blob(im, pixel_means, target_size, max_size):
     im = im.astype(np.float32, copy=False)
     # changed to use pytorch models
     im /= 255. # Convert range to [0,1]
+    # normalization for pytroch pretrained models.
+    # https://pytorch.org/docs/stable/torchvision/models.html
     pixel_means = [0.485, 0.456, 0.406]
-    im -= pixel_means # Minus mean
     pixel_stdens = [0.229, 0.224, 0.225]
+    
+    # normalize manual
+    im -= pixel_means # Minus mean    
     im /= pixel_stdens # divide by stddev
     
     # im = im[:, :, ::-1]
