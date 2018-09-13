@@ -33,17 +33,6 @@ from model.utils.net_utils import weights_normal_init, save_net, load_net, \
 from model.faster_rcnn.vgg16 import vgg16
 from model.faster_rcnn.resnet import resnet
 
-import torch._utils
-try:
-    torch._utils._rebuild_tensor_v2
-except AttributeError:
-    def _rebuild_tensor_v2(storage, storage_offset, size, stride, requires_grad, backward_hooks):
-        tensor = torch._utils._rebuild_tensor(storage, storage_offset, size, stride)
-        tensor.requires_grad = requires_grad
-        tensor._backward_hooks = backward_hooks
-        return tensor
-    torch._utils._rebuild_tensor_v2 = _rebuild_tensor_v2
-
 def parse_args():
   """
   Parse input arguments
@@ -54,7 +43,7 @@ def parse_args():
                       default='pascal_voc', type=str)
   parser.add_argument('--net', dest='net',
                     help='vgg16, res101',
-                    default='res101', type=str)
+                    default='vgg16', type=str)
   parser.add_argument('--start_epoch', dest='start_epoch',
                       help='starting epoch',
                       default=1, type=int)
@@ -73,7 +62,7 @@ def parse_args():
                       type=str)
   parser.add_argument('--nw', dest='num_workers',
                       help='number of worker to load data',
-                      default=1, type=int)
+                      default=0, type=int)
   parser.add_argument('--cuda', dest='cuda',
                       help='whether use CUDA',
                       action='store_true')
@@ -166,7 +155,7 @@ if __name__ == '__main__':
   if args.dataset == "pascal_voc":
       args.imdb_name = "voc_2007_trainval"
       args.imdbval_name = "voc_2007_test"
-      args.set_cfgs = ['ANCHOR_SCALES', '[8, 16, 32]', 'ANCHOR_RATIOS', '[0.5,1,2]', 'MAX_NUM_GT_BOXES', '16']
+      args.set_cfgs = ['ANCHOR_SCALES', '[8, 16, 32]', 'ANCHOR_RATIOS', '[0.5,1,2]', 'MAX_NUM_GT_BOXES', '20']
   elif args.dataset == "pascal_voc_0712":
       args.imdb_name = "voc_2007_trainval+voc_2012_trainval"
       args.imdbval_name = "voc_2007_test"
@@ -251,10 +240,6 @@ if __name__ == '__main__':
     fasterRCNN = resnet(imdb.classes, 101, pretrained=True, class_agnostic=args.class_agnostic)
   elif args.net == 'res50':
     fasterRCNN = resnet(imdb.classes, 50, pretrained=True, class_agnostic=args.class_agnostic)
-  elif args.net == 'res34':
-    fasterRCNN = resnet(imdb.classes, 34, pretrained=True, class_agnostic=args.class_agnostic)
-  elif args.net == 'res18':
-    fasterRCNN = resnet(imdb.classes, 18, pretrained=True, class_agnostic=args.class_agnostic)
   elif args.net == 'res152':
     fasterRCNN = resnet(imdb.classes, 152, pretrained=True, class_agnostic=args.class_agnostic)
   else:
@@ -286,27 +271,13 @@ if __name__ == '__main__':
 
   if args.resume:
     load_name = os.path.join(output_dir,
-                             'faster_rcnn_{}_{}_{}.pth'.format(args.checksession, args.checkepoch, args.checkpoint))
+      'faster_rcnn_{}_{}_{}.pth'.format(args.checksession, args.checkepoch, args.checkpoint))
     print("loading checkpoint %s" % (load_name))
     checkpoint = torch.load(load_name)
     args.session = checkpoint['session']
     args.start_epoch = checkpoint['epoch']
     fasterRCNN.load_state_dict(checkpoint['model'])
     optimizer.load_state_dict(checkpoint['optimizer'])
-    weight_decay = optimizer.param_groups[0]['weight_decay']
-    double_bias = True
-    bias_decay = True
-    
-    params = []
-    for key, value in dict(fasterRCNN.named_parameters()).items():
-        if value.requires_grad:
-            if 'bias' in key:
-                params += [{'params':[value],'lr':lr*(double_bias + 1), \
-                        'weight_decay': bias_decay and weight_decay or 0}]
-            else:
-                params += [{'params':[value],'lr':lr, 'weight_decay': weight_decay}]
-    
-    optimizer = torch.optim.Adam(params)
     lr = optimizer.param_groups[0]['lr']
     if 'pooling_mode' in checkpoint.keys():
       cfg.POOLING_MODE = checkpoint['pooling_mode']
@@ -350,10 +321,8 @@ if __name__ == '__main__':
 
       loss = rpn_loss_cls.mean() + rpn_loss_box.mean() \
            + RCNN_loss_cls.mean() + RCNN_loss_bbox.mean()
-      try:
-        loss_temp += loss.item()
-      except:
-        loss_temp += loss
+      loss_temp += loss.item()
+
       # backward
       optimizer.zero_grad()
       loss.backward()

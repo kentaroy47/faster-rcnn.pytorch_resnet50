@@ -38,16 +38,6 @@ try:
 except NameError:
     xrange = range  # Python 3
 
-import torch._utils
-try:
-    torch._utils._rebuild_tensor_v2
-except AttributeError:
-    def _rebuild_tensor_v2(storage, storage_offset, size, stride, requires_grad, backward_hooks):
-        tensor = torch._utils._rebuild_tensor(storage, storage_offset, size, stride)
-        tensor.requires_grad = requires_grad
-        tensor._backward_hooks = backward_hooks
-        return tensor
-    torch._utils._rebuild_tensor_v2 = _rebuild_tensor_v2
 
 def parse_args():
   """
@@ -92,7 +82,7 @@ def parse_args():
                       default=1, type=int)
   parser.add_argument('--checkpoint', dest='checkpoint',
                       help='checkpoint to load network',
-                      default=3739, type=int)
+                      default=10021, type=int)
   parser.add_argument('--vis', dest='vis',
                       help='visualization mode',
                       action='store_true')
@@ -143,12 +133,7 @@ if __name__ == '__main__':
     cfg_from_list(args.set_cfgs)
 
   print('Using config:')
-  cfg.TEST.RPN_POST_NMS_TOP_N = 120
-  cfg.TEST.RPN_PRE_NMS_TOP_N = 12000
-  cfg.TEST.RPN_MIN_SIZE = 8
-  
   pprint.pprint(cfg)
-
 
   cfg.TRAIN.USE_FLIPPED = False
   imdb, roidb, ratio_list, ratio_index = combined_roidb(args.imdbval_name, False)
@@ -275,9 +260,8 @@ if __name__ == '__main__':
       else:
           # Simply repeat the boxes, once for each class
           pred_boxes = np.tile(boxes, (1, scores.shape[1]))
-      
-#      print("pred box", data[1][0][2])
-      pred_boxes /= data[1][0][2]#.item()
+
+      pred_boxes /= data[1][0][2].item()
 
       scores = scores.squeeze()
       pred_boxes = pred_boxes.squeeze()

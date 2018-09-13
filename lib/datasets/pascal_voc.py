@@ -38,27 +38,21 @@ except NameError:
 
 
 class pascal_voc(imdb):
-    def __init__(self, image_set, year, devkit_path=None, train=True):
+    def __init__(self, image_set, year, devkit_path=None):
         imdb.__init__(self, 'voc_' + year + '_' + image_set)
         self._year = year
         self._image_set = image_set
         self._devkit_path = self._get_default_path() if devkit_path is None \
             else devkit_path
-        if not train:
-            self._devkit_path += '_val'
         self._data_path = os.path.join(self._devkit_path, 'VOC' + self._year)
-        if train:
-            self._classes = ('bg',  # always index 0
-                             'dontcare', 'car', 'van', 'truck',
-                             'person',
-                             'person_sitting', 'cyclist',
-                             'tram', 'misc')
-        else:
-            self._classes = ('bg','car','cyclist','dontcare','misc','person','person_sitting','tram','truck','van')
-#        self.num_classes = len(self._classes)
+        self._classes = ('__background__',  # always index 0
+                         'aeroplane', 'bicycle', 'bird', 'boat',
+                         'bottle', 'bus', 'car', 'cat', 'chair',
+                         'cow', 'diningtable', 'dog', 'horse',
+                         'motorbike', 'person', 'pottedplant',
+                         'sheep', 'sofa', 'train', 'tvmonitor')
         self._class_to_ind = dict(zip(self.classes, xrange(self.num_classes)))
-        print(self._class_to_ind)
-        self._image_ext = '.png'
+        self._image_ext = '.jpg'
         self._image_index = self._load_image_set_index()
         # Default to roidb handler
         # self._roidb_handler = self.selective_search_roidb
@@ -120,12 +114,6 @@ class pascal_voc(imdb):
         Return the default path where PASCAL VOC is expected to be installed.
         """
         return os.path.join(cfg.DATA_DIR, 'VOCdevkit' + self._year)
-    
-    def _get_default_path2(self):
-        """
-        Return the default path where PASCAL VOC is expected to be installed.
-        """
-        return os.path.join(cfg.DATA_DIR, 'VOCdevkit' + self._year + "_val")
 
     def gt_roidb(self):
         """
@@ -243,10 +231,10 @@ class pascal_voc(imdb):
         for ix, obj in enumerate(objs):
             bbox = obj.find('bndbox')
             # Make pixel indexes 0-based
-            x1 = float(bbox.find('xmin').text)
-            y1 = float(bbox.find('ymin').text)
-            x2 = float(bbox.find('xmax').text)
-            y2 = float(bbox.find('ymax').text)
+            x1 = float(bbox.find('xmin').text) - 1
+            y1 = float(bbox.find('ymin').text) - 1
+            x2 = float(bbox.find('xmax').text) - 1
+            y2 = float(bbox.find('ymax').text) - 1
 
             diffc = obj.find('difficult')
             difficult = 0 if diffc == None else int(diffc.text)

@@ -32,20 +32,21 @@ def im_list_to_blob(ims):
 
     return blob
 
-def prep_im_for_blob(im, pixel_means, target_size, max_size):
+def prep_im_for_blob(im, pixel_means, target_size, max_size, usecaffe=False):
     """Mean subtract and scale an image for use in a blob."""
-
-    im = im.astype(np.float32, copy=False)
-    # changed to use pytorch models
-    im /= 255. # Convert range to [0,1]
-    # normalization for pytroch pretrained models.
-    # https://pytorch.org/docs/stable/torchvision/models.html
-    pixel_means = [0.485, 0.456, 0.406]
-    pixel_stdens = [0.229, 0.224, 0.225]
-    
-    # normalize manual
-    im -= pixel_means # Minus mean    
-    im /= pixel_stdens # divide by stddev
+#    print("caffe?",usecaffe)
+    if not usecaffe:
+        im = im.astype(np.float32, copy=False)
+        # changed to use pytorch models
+        im /= 255. # Convert range to [0,1]
+        pixel_means = [0.485, 0.456, 0.406]
+        im -= pixel_means # Minus mean
+        pixel_stdens = [0.229, 0.224, 0.225]
+        im /= pixel_stdens # divide by stddev
+    else:
+        im = im.astype(np.float32, copy=False)
+        im -= pixel_means
+        # im = im[:, :, ::-1]
     
     # im = im[:, :, ::-1]
     im_shape = im.shape

@@ -22,10 +22,7 @@ import numpy as np
 for year in ['2007', '2012']:
   for split in ['train', 'val', 'trainval', 'test']:
     name = 'voc_{}_{}'.format(year, split)
-    if split == 'test':
-        __sets[name] = (lambda split=split, year=year: pascal_voc(split, year, train=False))
-    else:
-        __sets[name] = (lambda split=split, year=year: pascal_voc(split, year))
+    __sets[name] = (lambda split=split, year=year: pascal_voc(split, year))
 
 # Set up coco_2014_<split>
 for year in ['2014']:

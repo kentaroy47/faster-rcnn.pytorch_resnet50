@@ -156,10 +156,8 @@ class _ProposalLayer(nn.Module):
             # padding 0 at the end.
             num_proposal = proposals_single.size(0)
             output[i,:,0] = i
-#            try:
             output[i,:num_proposal,1:] = proposals_single
-#            except:
-#                continue
+
         return output
 
     def backward(self, top, propagate_down, bottom):

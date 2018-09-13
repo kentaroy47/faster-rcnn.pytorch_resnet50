@@ -23,12 +23,10 @@ def parse_rec(filename):
     obj_struct['truncated'] = int(obj.find('truncated').text)
     obj_struct['difficult'] = int(obj.find('difficult').text)
     bbox = obj.find('bndbox')
-#    print(float(bbox.find('xmin').text))
-#    try:
-    obj_struct['bbox'] = [int(np.floor(float(bbox.find('xmin').text))),
-                          int(np.floor(float(bbox.find('ymin').text))),
-                          int(np.floor(float(bbox.find('xmax').text))),
-                          int(np.floor(float(bbox.find('ymax').text)))]
+    obj_struct['bbox'] = [int(bbox.find('xmin').text),
+                          int(bbox.find('ymin').text),
+                          int(bbox.find('xmax').text),
+                          int(bbox.find('ymax').text)]
     objects.append(obj_struct)
 
   return objects
@@ -108,10 +106,7 @@ def voc_eval(detpath,
   with open(imagesetfile, 'r') as f:
     lines = f.readlines()
   imagenames = [x.strip() for x in lines]
-  
-  print("classname",detpath)
-  print("classname",classname)
-#  print("imageset",imagenames)
+
   if not os.path.isfile(cachefile):
     # load annotations
     recs = {}
@@ -144,7 +139,6 @@ def voc_eval(detpath,
     class_recs[imagename] = {'bbox': bbox,
                              'difficult': difficult,
                              'det': det}
-#    print("class_recs",bbox)
 
   # read dets
   detfile = detpath.format(classname)
@@ -207,11 +201,10 @@ def voc_eval(detpath,
   # compute precision recall
   fp = np.cumsum(fp)
   tp = np.cumsum(tp)
-  rec = tp / (float(npos)+1e-5)
+  rec = tp / float(npos)
   # avoid divide by zero in case the first detection matches a difficult
   # ground truth
   prec = tp / np.maximum(tp + fp, np.finfo(np.float64).eps)
   ap = voc_ap(rec, prec, use_07_metric)
-  print("ap:",ap)
 
   return rec, prec, ap
