@@ -2,7 +2,9 @@
 
 ## Forked from https://github.com/jwyang/faster-rcnn.pytorch
 changes.. updated script to use pytorch pretrained resnet (res18, res34, res50, res101, res151)
+
 The former code accepted only caffe pretrained models, so the normalization of images are changed to use pytorch models.
+
 Try the forked repo first and if you want to train with pytorch models, you can try this.
 
 ## Preparation
