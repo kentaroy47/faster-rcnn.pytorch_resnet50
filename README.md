@@ -7,6 +7,9 @@ The former code accepted only caffe pretrained models, so the normalization of i
 
 Try the forked repo first and if you want to train with pytorch models, you can try this.
 
+Take a look here, for the changes of Channel align and normalization.
+https://github.com/jwyang/faster-rcnn.pytorch/issues/173
+
 ## Preparation
 
 First of all, clone the code
