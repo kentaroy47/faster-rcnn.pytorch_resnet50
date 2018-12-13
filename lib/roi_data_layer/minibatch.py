@@ -70,7 +70,7 @@ def _get_image_blob(roidb, scale_inds):
       im = np.concatenate((im,im,im), axis=2)
     # flip the channel, since the original one using cv2
     # rgb -> bgr
-    im = im[:,:,::-1]
+    # im = im[:,:,::-1]
 
     if roidb[i]['flipped']:
       im = im[:, ::-1, :]
